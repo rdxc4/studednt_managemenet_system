@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rajkot Engineering College - Student Management Portal</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2c3e50;
+      --primary-light: #34495e;
+      --secondary: #3498db;
+      --success: #27ae60;
+      --warning: #f39c12;
+      --danger: #e74c3c;
+      --dark: #1a1a2e;
+      --light: #ecf0f1;
+      --white: #ffffff;
+      --shadow: 0 10px 30px rgba(0,0,0,0.2);
+      --shadow-hover: 0 20px 40px rgba(0,0,0,0.3);
+    }
+
+    * {
+      font-family: 'Poppins', sans-serif;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      min-height: 100vh;
+      color: #2c3e50;
+    }
+
+    /* Header */
+    .app-header {
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(20px);
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 1030;
+    }
+
+    .navbar-brand {
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: var(--primary) !important;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      background: linear-gradient(180deg, var(--dark) 0%, var(--primary) 100%);
+      width: 260px;
+      height: calc(100vh - 70px);
+      position: fixed;
+      top: 70px;
+      left: 0;
+      overflow-y: auto;
+      transition: all 0.3s ease;
+      z-index: 1020;
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar-nav .nav-link {
+      color: rgba(255,255,255,0.8);
+      padding: 1rem 1.5rem;
+      border-radius: 0 25px 25px 0;
+      margin: 0.25rem 0;
+      transition: all 0.3s ease;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .sidebar-nav .nav-link:hover,
+    .sidebar-nav .nav-link.active {
+      background: rgba(255,255,255,0.15);
+      color: white;
+      transform: translateX(10px);
+      box-shadow: 5px 0 20px rgba(255,255,255,0.1);
+    }
+
+    /* Main Content */
+    .main-content {
+      margin-left: 260px;
+      margin-top: 70px;
+      min-height: calc(100vh - 70px);
+      padding: 2rem;
+      transition: all 0.3s ease;
+    }
+
+    @media (max-width: 992px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.show { transform: translateX(0); }
+      .main-content { margin-left: 0; }
+    }
+
+    /* Cards & Tables */
+    .overview-card {
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: var(--shadow);
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      border: 1px solid rgba(255,255,255,0.2);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .prof-card {
+      background: white;
+      border-radius: 15px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      height: 100%;
+      border-top: 4px solid var(--secondary);
+    }
+
+    .data-table {
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .table thead th {
+      background: linear-gradient(135deg, #f8f9ff 0%, #e8ecff 100%);
+      border: none;
+      font-weight: 600;
+      padding: 1.25rem 1rem;
+    }
+    .table tbody tr {
+      transition: all 0.2s ease;
+      vertical-align: middle;
+      cursor: pointer;
+    }
+    .table tbody tr:hover {
+      background: rgba(52, 152, 219, 0.1);
+      transform: scale(1.01);
+    }
+
+    .status-badge { padding: 0.5rem 1rem; border-radius: 25px; font-size: 0.875rem; font-weight: 600; }
+    .status-active { background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; }
+    .status-warning { background: linear-gradient(135deg, #f39c12, #e67e22); color: white; }
+    .status-danger { background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; }
+
+    /* Loading Animation */
+    .loading-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(255,255,255,0.9); backdrop-filter: blur(10px);
+      z-index: 9999; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+  </style>
+</head>
+<body>
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
+    <h3 class="mt-4 mb-0">Loading REC Portal...</h3>
+  </div>
+
+  <header class="app-header py-2 px-4">
+    <nav class="navbar navbar-expand-lg">
+      <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="#">
+          <i class="fas fa-graduation-cap me-2 text-primary"></i>
+          REC Student Portal
+        </a>
+        <button class="navbar-toggler" type="button" id="sidebarToggle">
+          <i class="bi bi-list text-primary"></i>
+        </button>
+        <div class="navbar-nav ms-auto align-items-center">
+          <a class="d-flex align-items-center text-dark text-decoration-none p-2" href="#">
+            <img src="https://ui-avatars.com/api/?name=Admin&background=3498db&color=fff&size=40&bold=true" class="rounded-circle me-2" alt="Admin">
+            <span class="d-none d-md-inline fw-semibold">Dr. Raj Patel</span>
+          </a>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <aside id="sidebar" class="sidebar">
+    <nav class="sidebar-nav px-3 pt-4">
+      <a class="nav-link active" data-page="dashboard"><i class="bi bi-house-door me-3"></i><span>Dashboard</span></a>
+      <a class="nav-link" data-page="students"><i class="bi bi-people me-3"></i><span>Students</span></a>
+      <a class="nav-link" data-page="grades"><i class="bi bi-clipboard-data me-3"></i><span>Grades</span></a>
+      <a class="nav-link" data-page="attendance"><i class="bi bi-calendar-check me-3"></i><span>Attendance</span></a>
+      <a class="nav-link" data-page="reports"><i class="bi bi-shield-exclamation me-3"></i><span>Discipline Reports</span></a>
+      <div class="dropdown-divider mt-4"></div>
+      <a class="nav-link" data-page="settings"><i class="bi bi-gear me-3"></i><span>Settings</span></a>
+    </nav>
+  </aside>
+
+  <main id="mainContent" class="main-content">
+    <div id="pageContent"></div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const collegeData = { name: "Rajkot Engineering College", established: 1995, academicYear: '2025-2026' };
+
+    // Expanded Data: Added City, Phone, Father Name, Mother Name, and Parent Phone
+    let students = [
+      {id: 'REC001', name: 'Aarav Patel', rollNo: '20REC001', email: 'aarav.p@rec.edu.in', course: 'B.Tech CSE', cgpa: 8.75, sgpa: 8.9, attendance: 92, status: 'active', batch: '2023-27', city: 'Rajkot', phone: '+91 9876543210', fatherName: 'Ramesh Patel', motherName: 'Geeta Patel', parentPhone: '+91 9988776655', behavior: []},
+      {id: 'REC002', name: 'Diya Sharma', rollNo: '20REC002', email: 'diya.s@rec.edu.in', course: 'B.Tech ECE', cgpa: 7.92, sgpa: 8.1, attendance: 85, status: 'active', batch: '2023-27', city: 'Ahmedabad', phone: '+91 9123456780', fatherName: 'Sanjay Sharma', motherName: 'Kavita Sharma', parentPhone: '+91 9123400000', behavior: []},
+      {id: 'REC003', name: 'Vihaan Gupta', rollNo: '20REC003', email: 'vihaan.g@rec.edu.in', course: 'B.Tech ME', cgpa: 8.42, sgpa: 8.3, attendance: 71, status: 'warning', batch: '2022-26', city: 'Surat', phone: '+91 9898989898', fatherName: 'Anil Gupta', motherName: 'Sunita Gupta', parentPhone: '+91 9898000000', behavior: [{date: '12-Mar-2026', incident: 'Skipping practical labs frequently', action: 'Warning issued to parents'}]},
+      {id: 'REC004', name: 'Ananya Desai', rollNo: '20REC004', email: 'ananya.d@rec.edu.in', course: 'B.Tech CSE', cgpa: 9.10, sgpa: 9.4, attendance: 98, status: 'active', batch: '2023-27', city: 'Vadodara', phone: '+91 8877665544', fatherName: 'Prakash Desai', motherName: 'Meena Desai', parentPhone: '+91 8877000000', behavior: []},
+      {id: 'REC005', name: 'Kabir Singh', rollNo: '20REC005', email: 'kabir.s@rec.edu.in', course: 'B.Tech Civil', cgpa: 6.50, sgpa: 6.1, attendance: 65, status: 'danger', batch: '2022-26', city: 'Rajkot', phone: '+91 7766554433', fatherName: 'Vikram Singh', motherName: 'Pooja Singh', parentPhone: '+91 7766000000', behavior: [{date: '05-Feb-2026', incident: 'Disrupting ongoing lecture', action: 'Suspended for 2 days'}]},
+      {id: 'REC006', name: 'Meera Reddy', rollNo: '20REC006', email: 'meera.r@rec.edu.in', course: 'M.Tech', cgpa: 8.90, sgpa: 9.0, attendance: 95, status: 'active', batch: '2024-26', city: 'Bhavnagar', phone: '+91 9988112233', fatherName: 'Krishna Reddy', motherName: 'Lakshmi Reddy', parentPhone: '+91 9988000000', behavior: []},
+      {id: 'REC007', name: 'Rohan Joshi', rollNo: '20REC007', email: 'rohan.j@rec.edu.in', course: 'B.Tech ECE', cgpa: 7.20, sgpa: 7.4, attendance: 82, status: 'active', batch: '2023-27', city: 'Jamnagar', phone: '+91 9112233445', fatherName: 'Deepak Joshi', motherName: 'Aarti Joshi', parentPhone: '+91 9112000000', behavior: []},
+      {id: 'REC008', name: 'Ishita Verma', rollNo: '20REC008', email: 'ishita.v@rec.edu.in', course: 'B.Tech CSE', cgpa: 8.85, sgpa: 8.7, attendance: 89, status: 'active', batch: '2023-27', city: 'Rajkot', phone: '+91 8223344556', fatherName: 'Ravi Verma', motherName: 'Nisha Verma', parentPhone: '+91 8223000000', behavior: []},
+      {id: 'REC009', name: 'Arjun Mehta', rollNo: '20REC009', email: 'arjun.m@rec.edu.in', course: 'MBA', cgpa: 7.80, sgpa: 7.5, attendance: 76, status: 'warning', batch: '2025-27', city: 'Ahmedabad', phone: '+91 7334455667', fatherName: 'Rajesh Mehta', motherName: 'Bhavna Mehta', parentPhone: '+91 7334000000', behavior: [{date: '02-Apr-2026', incident: 'Misusing college Wi-Fi for torrents', action: 'Internet access revoked for 1 week'}]},
+      {id: 'REC010', name: 'Kavya Nair', rollNo: '20REC010', email: 'kavya.n@rec.edu.in', course: 'B.Tech IT', cgpa: 9.40, sgpa: 9.6, attendance: 99, status: 'active', batch: '2023-27', city: 'Gandhinagar', phone: '+91 9445566778', fatherName: 'Mohan Nair', motherName: 'Bindu Nair', parentPhone: '+91 9445000000', behavior: []},
+      {id: 'REC011', name: 'Vivaan Shah', rollNo: '20REC011', email: 'vivaan.s@rec.edu.in', course: 'B.Tech ME', cgpa: 6.90, sgpa: 7.1, attendance: 88, status: 'active', batch: '2022-26', city: 'Rajkot', phone: '+91 8556677889', fatherName: 'Kamlesh Shah', motherName: 'Hetal Shah', parentPhone: '+91 8556000000', behavior: []},
+      {id: 'REC012', name: 'Sanya Malhotra', rollNo: '20REC012', email: 'sanya.m@rec.edu.in', course: 'B.Tech CSE', cgpa: 8.10, sgpa: 8.4, attendance: 91, status: 'active', batch: '2023-27', city: 'Surat', phone: '+91 7667788990', fatherName: 'Ajay Malhotra', motherName: 'Ritu Malhotra', parentPhone: '+91 7667000000', behavior: []},
+      {id: 'REC013', name: 'Dhruv Chawla', rollNo: '20REC013', email: 'dhruv.c@rec.edu.in', course: 'B.Tech Civil', cgpa: 7.45, sgpa: 7.2, attendance: 74, status: 'warning', batch: '2022-26', city: 'Vadodara', phone: '+91 9778899001', fatherName: 'Sunil Chawla', motherName: 'Preeti Chawla', parentPhone: '+91 9778000000', behavior: [{date: '10-Jan-2026', incident: 'Late submission of major project', action: 'Marks deducted by 10%'}]},
+      {id: 'REC014', name: 'Nisha Tiwari', rollNo: '20REC014', email: 'nisha.t@rec.edu.in', course: 'B.Tech ECE', cgpa: 8.60, sgpa: 8.8, attendance: 94, status: 'active', batch: '2023-27', city: 'Rajkot', phone: '+91 8889900112', fatherName: 'Manoj Tiwari', motherName: 'Suman Tiwari', parentPhone: '+91 8889000000', behavior: []},
+      {id: 'REC015', name: 'Aryan Kapoor', rollNo: '20REC015', email: 'aryan.k@rec.edu.in', course: 'B.Tech IT', cgpa: 9.05, sgpa: 9.1, attendance: 96, status: 'active', batch: '2023-27', city: 'Ahmedabad', phone: '+91 7990011223', fatherName: 'Ashok Kapoor', motherName: 'Neelam Kapoor', parentPhone: '+91 7990000000', behavior: []},
+      {id: 'REC016', name: 'Riya Das', rollNo: '20REC016', email: 'riya.d@rec.edu.in', course: 'MBA', cgpa: 8.30, sgpa: 8.5, attendance: 85, status: 'active', batch: '2025-27', city: 'Bhavnagar', phone: '+91 9001122334', fatherName: 'Subhash Das', motherName: 'Anjali Das', parentPhone: '+91 9001000000', behavior: []},
+      {id: 'REC017', name: 'Karan Bhatia', rollNo: '20REC017', email: 'karan.b@rec.edu.in', course: 'B.Tech CSE', cgpa: 6.20, sgpa: 5.8, attendance: 55, status: 'danger', batch: '2023-27', city: 'Rajkot', phone: '+91 8112233445', fatherName: 'Nitin Bhatia', motherName: 'Komal Bhatia', parentPhone: '+91 8112000000', behavior: [{date: '28-Feb-2026', incident: 'Proxy attendance marked', action: 'Strict warning and parents called'}]},
+      {id: 'REC018', name: 'Pooja Agarwal', rollNo: '20REC018', email: 'pooja.a@rec.edu.in', course: 'B.Tech ME', cgpa: 8.75, sgpa: 8.9, attendance: 93, status: 'active', batch: '2022-26', city: 'Surat', phone: '+91 7223344556', fatherName: 'Vinod Agarwal', motherName: 'Rekha Agarwal', parentPhone: '+91 7223000000', behavior: []},
+      {id: 'REC019', name: 'Yash Rathore', rollNo: '20REC019', email: 'yash.r@rec.edu.in', course: 'B.Tech Civil', cgpa: 7.15, sgpa: 7.3, attendance: 80, status: 'active', batch: '2022-26', city: 'Jamnagar', phone: '+91 9334455667', fatherName: 'Mahendra Rathore', motherName: 'Jyoti Rathore', parentPhone: '+91 9334000000', behavior: []},
+      {id: 'REC020', name: 'Neha Pillai', rollNo: '20REC020', email: 'neha.p@rec.edu.in', course: 'B.Tech IT', cgpa: 9.25, sgpa: 9.5, attendance: 97, status: 'active', batch: '2023-27', city: 'Rajkot', phone: '+91 8445566778', fatherName: 'Ramesh Pillai', motherName: 'Usha Pillai', parentPhone: '+91 8445000000', behavior: []}
+    ];
+
+    students.forEach(s => s.photo = `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=random&color=fff&size=128`);
+
+    let currentPage = 'dashboard';
+
+    document.addEventListener('DOMContentLoaded', function() {
+      initApp();
+      loadDashboard();
+    });
+
+    function initApp() {
+      document.getElementById('sidebarToggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('show'));
+      document.addEventListener('click', function(e) {
+        if (e.target.closest('.nav-link[data-page], .dropdown-item[data-page], .btn[data-page]')) {
+          e.preventDefault();
+          loadPage(e.target.closest('[data-page]').dataset.page);
+        }
+      });
+      setTimeout(() => document.getElementById('loadingOverlay').style.display = 'none', 800);
+    }
+
+    function loadPage(pageName) {
+      currentPage = pageName;
+      const container = document.getElementById('pageContent');
+      container.innerHTML = `<div class="d-flex justify-content-center align-items-center min-vh-50"><div class="spinner-border text-primary"></div></div>`;
+      
+      setTimeout(() => {
+        switch(pageName) {
+          case 'dashboard': loadDashboard(); break;
+          case 'students': loadStudents(); break;
+          case 'grades': loadGrades(); break;
+          case 'attendance': loadAttendance(); break;
+          case 'reports': loadReports(); break;
+          case 'settings': loadSettings(); break;
+        }
+        document.querySelectorAll('.nav-link[data-page]').forEach(link => {
+          link.classList.toggle('active', link.dataset.page === pageName);
+        });
+      }, 300);
+    }
+
+    // --- Page Renderers ---
+
+    function loadDashboard() {
+      document.getElementById('pageContent').innerHTML = `
+        <div class="row g-4 mb-5">
+          <div class="col-12">
+            <div class="overview-card">
+              <div class="d-flex align-items-center mb-3">
+                <i class="fas fa-university fa-3x text-primary me-4"></i>
+                <div>
+                  <h1 class="display-6 fw-bold mb-0">${collegeData.name}</h1>
+                  <p class="lead text-muted mb-0">Empowering Minds, Shaping the Future Since ${collegeData.established}</p>
+                </div>
+              </div>
+              <hr class="my-4">
+              <h4 class="fw-bold">About Us</h4>
+              <p class="text-secondary fs-5">
+                Located in the heart of Gujarat, Rajkot Engineering College is a premier institution dedicated to academic excellence in engineering, technology, and management. We focus on holistic development, cutting-edge research, and preparing our students to be industry-ready leaders. With state-of-the-art labs, a massive digital library, and a sprawling 50-acre green campus, REC is committed to providing a transformative educational experience.
+              </p>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <h3 class="mb-4 fw-bold"><i class="fas fa-chalkboard-teacher me-2 text-primary"></i> Faculty & Leadership Experiences</h3>
+            <div class="row g-4">
+              <div class="col-md-4">
+                <div class="prof-card">
+                  <div class="d-flex align-items-center mb-3">
+                    <img src="https://ui-avatars.com/api/?name=Amit+Patel&background=3498db&color=fff" class="rounded-circle me-3" width="60">
+                    <div>
+                      <h5 class="mb-0 fw-bold">Dr. Amit Patel</h5>
+                      <small class="text-muted">HOD - Computer Science</small>
+                    </div>
+                  </div>
+                  <p class="text-secondary small">"With over 20 years of teaching experience, my goal at REC has always been to bridge the gap between theoretical algorithms and real-world software engineering. Our students are consistently placed in top-tier tech companies globally."</p>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="prof-card" style="border-top-color: var(--success);">
+                  <div class="d-flex align-items-center mb-3">
+                    <img src="https://ui-avatars.com/api/?name=Sneha+Rao&background=27ae60&color=fff" class="rounded-circle me-3" width="60">
+                    <div>
+                      <h5 class="mb-0 fw-bold">Prof. Sneha Rao</h5>
+                      <small class="text-muted">Lead - Civil Engineering</small>
+                    </div>
+                  </div>
+                  <p class="text-secondary small">"Engineering is about building a better tomorrow. Through our smart-city simulation labs and practical field internships, I ensure that our Civil Engineering batch learns the true value of sustainable construction."</p>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="prof-card" style="border-top-color: var(--warning);">
+                  <div class="d-flex align-items-center mb-3">
+                    <img src="https://ui-avatars.com/api/?name=Vikram+Joshi&background=f39c12&color=fff" class="rounded-circle me-3" width="60">
+                    <div>
+                      <h5 class="mb-0 fw-bold">Dr. Vikram Joshi</h5>
+                      <small class="text-muted">Dean of Admissions</small>
+                    </div>
+                  </div>
+                  <p class="text-secondary small">"Selecting the right minds is crucial. Over my 15 years here, I have seen REC transform raw talent into visionary innovators. We look for passion, curiosity, and the drive to solve complex societal problems."</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function loadStudents() {
+      document.getElementById('pageContent').innerHTML = `
+        <div class="mb-4">
+          <h2 class="fw-bold">Student Directory</h2>
+          <p class="text-muted">Total Enrolled: ${students.length} — <strong class="text-primary">Click on any student row to view full family & contact details.</strong></p>
+        </div>
+        <div class="data-table table-responsive p-3">
+          <table class="table table-hover">
+            <thead>
+              <tr><th>Photo</th><th>Roll No</th><th>Name</th><th>Course</th><th>CGPA</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              ${students.map(s => `
+                <tr onclick="showStudentModal('${s.id}')" title="Click to view details">
+                  <td><img src="${s.photo}" class="rounded-circle" width="40"></td>
+                  <td class="fw-bold">${s.rollNo}</td>
+                  <td>${s.name}<br><small class="text-muted">${s.email}</small></td>
+                  <td>${s.course}<br><small>${s.batch}</small></td>
+                  <td><span class="badge bg-${s.cgpa >= 8.5 ? 'success' : s.cgpa >= 7 ? 'primary' : 'warning'}">${s.cgpa}</span></td>
+                  <td><span class="status-badge status-${s.status}">${s.status.toUpperCase()}</span></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="modal fade" id="studentDetailModal" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+              <div class="modal-header bg-light border-0">
+                <h5 class="modal-title fw-bold text-primary" id="modalTitle">Student Profile</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body p-0" id="modalBodyContent">
+                </div>
+              <div class="modal-footer border-0 bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Function to populate and show the Modal
+    window.showStudentModal = function(studentId) {
+      const s = students.find(x => x.id === studentId);
+      if(!s) return;
+
+      document.getElementById('modalTitle').innerText = `${s.name} (${s.rollNo})`;
+      
+      document.getElementById('modalBodyContent').innerHTML = `
+        <div class="text-center p-4" style="background: linear-gradient(135deg, #f8f9ff 0%, #e8ecff 100%);">
+           <img src="${s.photo}" class="rounded-circle shadow-sm border border-3 border-white mb-3" width="100">
+           <h4 class="fw-bold mb-0">${s.name}</h4>
+           <p class="text-muted mb-0">${s.course} • Batch ${s.batch}</p>
+        </div>
+        <div class="p-4">
+          <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">Personal & Contact Info</h6>
+          <div class="row mb-2">
+            <div class="col-5 text-muted fw-semibold">City:</div>
+            <div class="col-7">${s.city}</div>
+          </div>
+          <div class="row mb-2">
+            <div class="col-5 text-muted fw-semibold">Student Phone:</div>
+            <div class="col-7">${s.phone}</div>
+          </div>
+          <div class="row mb-4">
+            <div class="col-5 text-muted fw-semibold">Email:</div>
+            <div class="col-7 text-truncate" title="${s.email}">${s.email}</div>
+          </div>
+
+          <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">Family Information</h6>
+          <div class="row mb-2">
+            <div class="col-5 text-muted fw-semibold">Father's Name:</div>
+            <div class="col-7">${s.fatherName}</div>
+          </div>
+          <div class="row mb-2">
+            <div class="col-5 text-muted fw-semibold">Mother's Name:</div>
+            <div class="col-7">${s.motherName}</div>
+          </div>
+          <div class="row mb-2">
+            <div class="col-5 text-muted fw-semibold">Parents' Mobile:</div>
+            <div class="col-7"><strong>${s.parentPhone}</strong></div>
+          </div>
+        </div>
+      `;
+
+      // Show modal using Bootstrap JS API
+      const detailModal = new bootstrap.Modal(document.getElementById('studentDetailModal'));
+      detailModal.show();
+    }
+
+    function loadAttendance() {
+      document.getElementById('pageContent').innerHTML = `
+        <div class="mb-4"><h2 class="fw-bold">Live Attendance Tracking</h2></div>
+        <div class="data-table table-responsive p-3">
+          <table class="table table-hover align-middle">
+            <thead><tr><th>Roll No</th><th>Name</th><th>Course</th><th>Attendance %</th></tr></thead>
+            <tbody>
+              ${students.map(s => {
+                let color = s.attendance >= 85 ? 'success' : s.attendance >= 75 ? 'warning' : 'danger';
+                return `<tr>
+                  <td class="fw-bold">${s.rollNo}</td><td>${s.name}</td><td>${s.course}</td>
+                  <td style="width: 40%;">
+                    <div class="d-flex align-items-center">
+                      <span class="me-3 fw-bold text-${color}">${s.attendance}%</span>
+                      <div class="progress flex-grow-1" style="height: 8px;"><div class="progress-bar bg-${color}" style="width: ${s.attendance}%;"></div></div>
+                    </div>
+                  </td>
+                </tr>`}).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function loadGrades() {
+      document.getElementById('pageContent').innerHTML = `
+        <div class="mb-4"><h2 class="fw-bold">Academic Grades</h2></div>
+        <div class="row g-4">
+          ${students.map(s => `
+            <div class="col-md-6 col-xl-4">
+              <div class="overview-card p-3">
+                <div class="d-flex align-items-center mb-3">
+                  <img src="${s.photo}" class="rounded-circle me-3" width="50">
+                  <div><h5 class="mb-0 fw-bold">${s.name}</h5><small class="text-muted">${s.rollNo}</small></div>
+                </div>
+                <div class="row text-center border-top pt-3">
+                  <div class="col-6 border-end"><p class="mb-0 text-muted small">SGPA</p><h4 class="fw-bold text-primary">${s.sgpa}</h4></div>
+                  <div class="col-6"><p class="mb-0 text-muted small">CGPA</p><h4 class="fw-bold text-${s.cgpa >= 8.5 ? 'success' : s.cgpa >= 7 ? 'primary' : 'warning'}">${s.cgpa}</h4></div>
+                </div>
+              </div>
+            </div>`).join('')}
+        </div>
+      `;
+    }
+
+    function loadReports() {
+      const reported = students.filter(s => s.behavior.length > 0);
+      document.getElementById('pageContent').innerHTML = `
+        <div class="mb-4"><h2 class="fw-bold text-danger"><i class="bi bi-shield-exclamation me-2"></i>Discipline Reports</h2></div>
+        <div class="data-table table-responsive p-3">
+          <table class="table table-hover align-middle">
+            <thead class="table-light"><tr><th>Date</th><th>Student</th><th>Incident</th><th>Action Taken</th></tr></thead>
+            <tbody>
+              ${reported.length === 0 ? `<tr><td colspan="4" class="text-center py-4">No disciplinary records found.</td></tr>` : 
+                reported.map(s => s.behavior.map(b => `
+                  <tr>
+                    <td><span class="badge bg-light text-dark border">${b.date}</span></td>
+                    <td><div class="fw-bold text-danger">${s.name}</div><small class="text-muted">${s.rollNo}</small></td>
+                    <td>${b.incident}</td><td><strong>${b.action}</strong></td>
+                  </tr>`).join('')).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function loadSettings() {
+      document.getElementById('pageContent').innerHTML = `
+        <div class="mb-4"><h2 class="fw-bold">Settings</h2></div>
+        <div class="overview-card p-4">
+          <p>System configurations are locked to read-only for standard faculty accounts.</p>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
